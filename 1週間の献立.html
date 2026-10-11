@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>1週間の献立</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  --bg: #EDF1EE;
+  --card: #FFFFFF;
+  --ink: #1B2A3A;
+  --sub: #5B6B76;
+  --line: #D3DCD8;
+  --accent: #2F6F5E;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DCEBE5;
+  --warn: #B4532A;
+  --warn-soft: #F6E3DA;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11191D; --card: #1A252B; --ink: #E6EEEA; --sub: #9DB0B5;
+    --line: #2B3A41; --accent: #6FC2A5; --accent-ink: #0F1C18; --accent-soft: #23372F;
+    --warn: #F0A27C; --warn-soft: #3A2A22;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11191D; --card: #1A252B; --ink: #E6EEEA; --sub: #9DB0B5;
+  --line: #2B3A41; --accent: #6FC2A5; --accent-ink: #0F1C18; --accent-soft: #23372F;
+  --warn: #F0A27C; --warn-soft: #3A2A22;
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+main { max-width: 520px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 28px; font-weight: 700; margin: 8px 0 4px; letter-spacing: .02em; }
+.lead { color: var(--sub); margin: 0 0 20px; font-size: 15px; }
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px 16px;
+}
+.field { margin-bottom: 20px; }
+.field:last-of-type { margin-bottom: 18px; }
+.field > label, .field > .label { display: block; font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+.hint { color: var(--sub); font-size: 13px; margin-top: 6px; }
+
+.stepper { display: flex; align-items: center; gap: 12px; }
+.stepper button {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+  font: inherit; font-size: 24px; line-height: 1; cursor: pointer;
+}
+.stepper output { min-width: 4.5em; text-align: center; font-size: 24px; font-weight: 700; }
+
+.money { display: flex; align-items: center; gap: 8px; }
+.money span { font-size: 20px; font-weight: 700; }
+.money input {
+  flex: 1; min-width: 0; height: 52px; padding: 0 14px;
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--bg); color: var(--ink);
+  font: inherit; font-size: 22px; font-weight: 700;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.chip {
+  border: 1px solid var(--line); background: transparent; color: var(--ink);
+  border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; cursor: pointer;
+}
+
+.seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.seg button {
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+  border-radius: 12px; padding: 10px 0; font: inherit; font-size: 18px; font-weight: 700; cursor: pointer;
+}
+.seg button small { display: block; font-size: 11px; font-weight: 400; color: var(--sub); }
+.seg button[aria-pressed="true"], .chip[aria-pressed="true"] {
+  background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+}
+.seg button[aria-pressed="true"] small { color: var(--accent-ink); opacity: .85; }
+
+.go {
+  width: 100%; height: 56px; border: 0; border-radius: 14px;
+  background: var(--accent); color: var(--accent-ink);
+  font: inherit; font-size: 18px; font-weight: 700; cursor: pointer;
+}
+button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.msg { color: var(--warn); font-size: 14px; margin: 10px 0 0; min-height: 1.2em; }
+
+#result { margin-top: 28px; }
+.summary { border-radius: 18px; padding: 16px; background: var(--accent-soft); }
+.summary.over { background: var(--warn-soft); }
+.sum-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.sum-total { font-size: 30px; font-weight: 700; }
+.sum-sub { color: var(--sub); font-size: 14px; }
+.bar { height: 10px; border-radius: 999px; background: var(--card); margin: 12px 0 8px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.summary.over .bar i { background: var(--warn); }
+.sum-note { font-size: 14px; margin: 0; }
+
+.days { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 12px; }
+.day {
+  display: grid; grid-template-columns: 52px 1fr; gap: 14px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px;
+}
+.dow {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent);
+  display: grid; place-items: center; font-size: 22px; font-weight: 700;
+}
+.dishes { list-style: none; margin: 0; padding: 0; }
+.dishes li { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; }
+.dishes .name { font-weight: 700; }
+.dishes .cat { color: var(--sub); font-size: 12px; margin-right: 8px; font-weight: 400; }
+.dishes .yen { color: var(--sub); font-size: 13px; white-space: nowrap; }
+.day-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); font-size: 14px; color: var(--sub); }
+.day-foot.over { color: var(--warn); }
+.redo {
+  border: 1px solid var(--line); background: transparent; color: var(--ink);
+  border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; cursor: pointer;
+}
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+.actions button {
+  height: 48px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--card); color: var(--ink); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+}
+.foot { color: var(--sub); font-size: 12px; margin-top: 20px; }
+
+.shop { margin-top: 28px; }
+.shop-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.shop h2 { font-size: 20px; margin: 0; }
+.shop h3 { font-size: 15px; margin: 18px 0 6px; color: var(--accent); }
+.items { list-style: none; margin: 0; padding: 0; background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+.items li + li { border-top: 1px solid var(--line); }
+.items label { display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 48px; cursor: pointer; }
+.items input { width: 22px; height: 22px; accent-color: var(--accent); flex: none; margin: 0; }
+.items .iname { flex: 1; font-weight: 500; }
+.items .iamt { color: var(--sub); font-size: 14px; white-space: nowrap; }
+.items input:checked ~ span { text-decoration: line-through; opacity: .45; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: no-preference) {
+  .bar i { transition: width .4s ease; }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>1週間の献立</h1>
+  <p class="lead">人数・予算・品数を決めると、夕食7日分と買い物リストを作ります。</p>
+
+  <section class="panel" aria-label="条件">
+    <div class="field">
+      <span class="label">人数</span>
+      <div class="stepper">
+        <button type="button" id="pMinus" aria-label="人数を減らす">−</button>
+        <output id="pVal">2人</output>
+        <button type="button" id="pPlus" aria-label="人数を増やす">＋</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="budget">1週間の食費（夕食）</label>
+      <div class="money">
+        <span>¥</span>
+        <input id="budget" type="number" inputmode="numeric" min="1000" step="500" value="10000">
+      </div>
+      <div class="chips" id="chips">
+        <button type="button" class="chip" data-v="5000">5,000</button>
+        <button type="button" class="chip" data-v="8000">8,000</button>
+        <button type="button" class="chip" data-v="10000">10,000</button>
+        <button type="button" class="chip" data-v="15000">15,000</button>
+        <button type="button" class="chip" data-v="20000">20,000</button>
+      </div>
+      <div class="hint" id="perHint"></div>
+    </div>
+
+    <div class="field">
+      <span class="label">1食の品数</span>
+      <div class="seg" id="seg">
+        <button type="button" data-n="1">1品<small>丼・麺など</small></button>
+        <button type="button" data-n="2">2品<small>主菜+副菜</small></button>
+        <button type="button" data-n="3">3品<small>+汁物</small></button>
+        <button type="button" data-n="4">4品<small>副菜2つ</small></button>
+      </div>
+      <div class="hint">ご飯は含みません。</div>
+    </div>
+
+    <button type="button" class="go" id="go">献立をつくる</button>
+    <p class="msg" id="msg" role="status"></p>
+  </section>
+
+  <section id="result" hidden aria-live="polite"></section>
+  <p class="foot">金額は1人前の目安です。実際の価格はお店や時期で変わります。</p>
+</main>
+
+<script>
+(function () {
+  var DAYS = ["月", "火", "水", "木", "金", "土", "日"];
+  var CAT = { one: "一品", main: "主菜", side: "副菜", soup: "汁物" };
+
+  // [名前, 1人前の目安(円), たんぱく源]
+  var RAW = {
+    one: [
+      ["親子丼",200,"chicken"],["牛丼",300,"beef"],["カレーライス",220,"pork"],
+      ["ナポリタン",180,"pork"],["焼きうどん",160,"pork"],["卵チャーハン",150,"egg"],
+      ["豚キムチ丼",230,"pork"],["鶏そぼろ丼",200,"chicken"],["鮭チャーハン",220,"fish"],
+      ["豚白菜のミルフィーユ鍋",280,"pork"],["ビビンバ",280,"beef"],["オムライス",220,"egg"],
+      ["冷やし中華",230,"pork"],["ミートソースパスタ",210,"beef"],["あんかけ焼きそば",240,"pork"]
+    ],
+    main: [
+      ["鶏の唐揚げ",250,"chicken"],["豚の生姜焼き",280,"pork"],["鮭の塩焼き",250,"fish"],
+      ["ハンバーグ",300,"beef"],["麻婆豆腐",150,"tofu"],["鶏の照り焼き",230,"chicken"],
+      ["サバの味噌煮",280,"fish"],["回鍋肉",260,"pork"],["肉じゃが",220,"beef"],
+      ["厚揚げと豚肉の炒め",200,"pork"],["チキン南蛮",240,"chicken"],["ぶりの照り焼き",350,"fish"],
+      ["豚バラ大根",230,"pork"],["鶏肉のトマト煮",260,"chicken"],["餃子",220,"pork"],
+      ["エビチリ",380,"fish"],["豆腐ハンバーグ",180,"tofu"],["牛肉と玉ねぎの炒め",380,"beef"],
+      ["野菜たっぷり卵炒め",130,"egg"],["鶏むねのねぎ塩焼き",200,"chicken"]
+    ],
+    side: [
+      ["ほうれん草のおひたし",50,"veg"],["きんぴらごぼう",60,"veg"],["ポテトサラダ",80,"veg"],
+      ["冷奴",60,"veg"],["小松菜のごま和え",55,"veg"],["切り干し大根の煮物",50,"veg"],
+      ["ひじきの煮物",60,"veg"],["卵焼き",70,"veg"],["キャベツの塩昆布和え",40,"veg"],
+      ["もやしナムル",40,"veg"],["かぼちゃの煮物",80,"veg"],["春雨サラダ",90,"veg"],
+      ["トマトとツナのサラダ",100,"veg"],["大根サラダ",70,"veg"],["ブロッコリーのおかか和え",60,"veg"],
+      ["なすの揚げ浸し",80,"veg"],["納豆",50,"veg"]
+    ],
+    soup: [
+      ["豆腐とわかめの味噌汁",30,"veg"],["豚汁",100,"veg"],["卵スープ",40,"veg"],
+      ["わかめスープ",30,"veg"],["具だくさん味噌汁",60,"veg"],["コーンスープ",50,"veg"],
+      ["春雨スープ",50,"veg"],["なめこ汁",40,"veg"],["けんちん汁",80,"veg"]
+    ]
+  };
+  var DB = {};
+  Object.keys(RAW).forEach(function (k) {
+    DB[k] = RAW[k].map(function (r) { return { name: r[0], cost: r[1], prot: r[2], cat: k }; });
+  });
+
+
+  // 1人前の材料（調味料・油・だしは家にある前提）
+  var ING = {
+    "親子丼":"鶏もも肉:100g,玉ねぎ:0.5個,卵:1個",
+    "牛丼":"牛薄切り肉:100g,玉ねぎ:0.5個",
+    "カレーライス":"豚こま肉:80g,玉ねぎ:0.5個,にんじん:0.3本,じゃがいも:0.5個,カレールウ:20g",
+    "ナポリタン":"スパゲッティ:100g,ウインナー:2本,玉ねぎ:0.25個,ピーマン:0.5個",
+    "焼きうどん":"冷凍うどん:1玉,豚こま肉:60g,キャベツ:60g,にんじん:0.2本",
+    "卵チャーハン":"卵:1個,長ねぎ:0.2本",
+    "豚キムチ丼":"豚こま肉:80g,キムチ:50g,にら:0.3束",
+    "鶏そぼろ丼":"鶏ひき肉:100g,卵:1個,いんげん:30g",
+    "鮭チャーハン":"塩鮭:1切れ,卵:1個,長ねぎ:0.2本",
+    "豚白菜のミルフィーユ鍋":"豚バラ薄切り肉:100g,白菜:150g",
+    "ビビンバ":"牛薄切り肉:80g,もやし:60g,ほうれん草:40g,にんじん:0.2本,キムチ:30g,卵:1個",
+    "オムライス":"卵:2個,鶏もも肉:50g,玉ねぎ:0.25個",
+    "冷やし中華":"中華麺:1玉,ハム:2枚,きゅうり:0.5本,卵:1個,トマト:0.5個",
+    "ミートソースパスタ":"スパゲッティ:100g,合いびき肉:80g,玉ねぎ:0.3個,トマト缶:0.25缶",
+    "あんかけ焼きそば":"焼きそば麺:1玉,豚こま肉:60g,白菜:80g,にんじん:0.2本",
+    "鶏の唐揚げ":"鶏もも肉:150g",
+    "豚の生姜焼き":"豚ロース薄切り肉:120g,玉ねぎ:0.25個,キャベツ:50g",
+    "鮭の塩焼き":"生鮭:1切れ",
+    "ハンバーグ":"合いびき肉:120g,玉ねぎ:0.3個,卵:0.25個,パン粉:10g",
+    "麻婆豆腐":"豆腐:0.5丁,豚ひき肉:50g,長ねぎ:0.2本",
+    "鶏の照り焼き":"鶏もも肉:150g",
+    "サバの味噌煮":"サバ:1切れ",
+    "回鍋肉":"豚バラ薄切り肉:100g,キャベツ:100g,ピーマン:0.5個",
+    "肉じゃが":"牛薄切り肉:80g,じゃがいも:1個,玉ねぎ:0.5個,にんじん:0.3本",
+    "厚揚げと豚肉の炒め":"厚揚げ:0.5枚,豚こま肉:60g,キャベツ:60g",
+    "チキン南蛮":"鶏むね肉:150g,卵:0.5個",
+    "ぶりの照り焼き":"ぶり:1切れ",
+    "豚バラ大根":"豚バラ薄切り肉:100g,大根:150g",
+    "鶏肉のトマト煮":"鶏もも肉:120g,トマト缶:0.5缶,玉ねぎ:0.3個",
+    "餃子":"餃子の皮:8枚,豚ひき肉:60g,キャベツ:60g,にら:0.2束",
+    "エビチリ":"むきえび:100g,長ねぎ:0.3本",
+    "豆腐ハンバーグ":"豆腐:0.5丁,鶏ひき肉:80g,玉ねぎ:0.2個",
+    "牛肉と玉ねぎの炒め":"牛薄切り肉:120g,玉ねぎ:0.5個,ピーマン:0.5個",
+    "野菜たっぷり卵炒め":"卵:2個,キャベツ:80g,にんじん:0.2本,もやし:50g",
+    "鶏むねのねぎ塩焼き":"鶏むね肉:150g,長ねぎ:0.5本",
+    "ほうれん草のおひたし":"ほうれん草:80g",
+    "きんぴらごぼう":"ごぼう:0.3本,にんじん:0.2本",
+    "ポテトサラダ":"じゃがいも:1個,きゅうり:0.3本,ハム:1枚",
+    "冷奴":"豆腐:0.5丁",
+    "小松菜のごま和え":"小松菜:80g",
+    "切り干し大根の煮物":"切り干し大根:10g,にんじん:0.2本,油揚げ:0.3枚",
+    "ひじきの煮物":"ひじき:5g,にんじん:0.2本,油揚げ:0.3枚",
+    "卵焼き":"卵:1個",
+    "キャベツの塩昆布和え":"キャベツ:80g,塩昆布:5g",
+    "もやしナムル":"もやし:100g",
+    "かぼちゃの煮物":"かぼちゃ:100g",
+    "春雨サラダ":"春雨:20g,きゅうり:0.3本,ハム:1枚",
+    "トマトとツナのサラダ":"トマト:1個,ツナ缶:0.3缶",
+    "大根サラダ":"大根:100g",
+    "ブロッコリーのおかか和え":"ブロッコリー:0.3株",
+    "なすの揚げ浸し":"なす:1本",
+    "納豆":"納豆:1パック",
+    "豆腐とわかめの味噌汁":"豆腐:0.2丁,乾燥わかめ:2g",
+    "豚汁":"豚こま肉:30g,大根:50g,にんじん:0.1本,長ねぎ:0.1本",
+    "卵スープ":"卵:0.5個,長ねぎ:0.1本",
+    "わかめスープ":"乾燥わかめ:2g,長ねぎ:0.1本",
+    "具だくさん味噌汁":"大根:40g,にんじん:0.1本,油揚げ:0.3枚,長ねぎ:0.1本",
+    "コーンスープ":"コーン缶:0.25缶,牛乳:100ml",
+    "春雨スープ":"春雨:10g,長ねぎ:0.1本,白菜:30g",
+    "なめこ汁":"なめこ:0.3袋,豆腐:0.2丁",
+    "けんちん汁":"大根:40g,にんじん:0.1本,豆腐:0.2丁,ごぼう:0.1本"
+  };
+  var CATMAP = {};
+  var CAT_ORDER = ["野菜", "肉・魚", "卵・豆腐・乳製品", "麺・乾物・缶詰", "その他"];
+  [
+    ["野菜", "玉ねぎ,にんじん,じゃがいも,ピーマン,キャベツ,にら,いんげん,長ねぎ,白菜,もやし,ほうれん草,小松菜,きゅうり,トマト,大根,ごぼう,なす,かぼちゃ,ブロッコリー,なめこ,キムチ"],
+    ["肉・魚", "鶏もも肉,鶏むね肉,牛薄切り肉,豚こま肉,豚バラ薄切り肉,豚ロース薄切り肉,合いびき肉,豚ひき肉,鶏ひき肉,ウインナー,ハム,生鮭,塩鮭,サバ,ぶり,むきえび"],
+    ["卵・豆腐・乳製品", "卵,豆腐,厚揚げ,油揚げ,納豆,牛乳"],
+    ["麺・乾物・缶詰", "スパゲッティ,冷凍うどん,中華麺,焼きそば麺,餃子の皮,春雨,切り干し大根,ひじき,乾燥わかめ,塩昆布,パン粉,カレールウ,トマト缶,ツナ缶,コーン缶"]
+  ].forEach(function (g) { g[1].split(",").forEach(function (n) { CATMAP[n] = g[0]; }); });
+
+  var state = { people: 2, budget: 10000, count: 3, plan: null, checked: {} };
+  var $ = function (s) { return document.querySelector(s); };
+
+  function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function yen(n) { if (!isFinite(n)) return "—"; return "¥" + (Math.round(n / 10) * 10).toLocaleString("ja-JP"); }
+  function sumCost(dishes) { return dishes.reduce(function (a, d) { return a + d.cost; }, 0); }
+
+  function pick(list, n) {
+    var pool = list.slice(), out = [];
+    while (n-- > 0 && pool.length) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    return out;
+  }
+  function candidate(n) {
+    if (n === 1) return [rand(DB.one)];
+    var d = [rand(DB.main)];
+    d = d.concat(pick(DB.side, n === 4 ? 2 : 1));
+    if (n >= 3) d.push(rand(DB.soup));
+    return d;
+  }
+  function mainOf(day) { return day ? day.dishes.filter(function (d) { return d.cat === "main" || d.cat === "one"; })[0] : null; }
+
+  function build(i, cap) {
+    var n = state.count, plan = state.plan;
+    var usedMain = {}, sideCnt = {}, soupCnt = {};
+    plan.forEach(function (day, j) {
+      if (!day) return;
+      if (j === i) { var m0 = mainOf(day); if (m0) usedMain[m0.name] = true; return; }
+      day.dishes.forEach(function (d) {
+        if (d.cat === "main" || d.cat === "one") usedMain[d.name] = true;
+        else if (d.cat === "side") sideCnt[d.name] = (sideCnt[d.name] || 0) + 1;
+        else if (d.cat === "soup") soupCnt[d.name] = (soupCnt[d.name] || 0) + 1;
+      });
+    });
+    var prev = mainOf(plan[i - 1]), next = mainOf(plan[i + 1]);
+    var nb = [prev && prev.prot, next && next.prot];
+    var nbSoup = [plan[i - 1], plan[i + 1]].map(function (d) {
+      var s = d && d.dishes.filter(function (x) { return x.cat === "soup"; })[0]; return s && s.name;
+    });
+
+    function ok(c, level) {
+      if (sumCost(c) > cap) return false;
+      var m = c[0];
+      if (level <= 1 && usedMain[m.name]) return false;
+      if (level === 0) {
+        if (nb.indexOf(m.prot) !== -1 && m.prot !== "veg") return false;
+        for (var k = 0; k < c.length; k++) {
+          if (c[k].cat === "side" && (sideCnt[c[k].name] || 0) >= 2) return false;
+          if (c[k].cat === "soup" && ((soupCnt[c[k].name] || 0) >= 2 || nbSoup.indexOf(c[k].name) !== -1)) return false;
+        }
+      }
+      return true;
+    }
+
+    for (var level = 0; level <= 2; level++) {
+      var valid = [];
+      for (var t = 0; t < 80; t++) {
+        var c = candidate(n);
+        if (ok(c, level)) valid.push(c);
+      }
+      if (valid.length) {
+        var rich = valid.filter(function (c) { return sumCost(c) >= cap * 0.65; });
+        return { dishes: rand(rich.length ? rich : valid), over: false };
+      }
+    }
+    var best = null;
+    for (var u = 0; u < 200; u++) {
+      var cc = candidate(n);
+      if (!best || sumCost(cc) < sumCost(best)) best = cc;
+    }
+    return { dishes: best, over: true };
+  }
+
+  function cap() { return state.budget / 7 / state.people; }
+
+  function generate() {
+    state.plan = [null, null, null, null, null, null, null];
+    state.checked = {};
+    for (var i = 0; i < 7; i++) state.plan[i] = build(i, cap());
+    render();
+  }
+  function redo(i) {
+    state.plan[i] = build(i, cap());
+    render();
+  }
+
+  function render() {
+    var el = $("#result");
+    if (!state.plan) { el.hidden = true; return; }
+    var perPerson = state.plan.reduce(function (a, d) { return a + sumCost(d.dishes); }, 0);
+    var total = perPerson * state.people;
+    var over = total > state.budget;
+    var pct = Math.min(100, Math.round(total / state.budget * 100));
+    var diff = Math.abs(state.budget - total);
+
+    var html = '<div class="summary' + (over ? " over" : "") + '">' +
+      '<div class="sum-row"><span class="sum-total">' + yen(total) + '</span>' +
+      '<span class="sum-sub">予算 ' + yen(state.budget) + '</span></div>' +
+      '<div class="bar"><i style="width:' + pct + '%"></i></div>' +
+      '<p class="sum-note">' + (over
+        ? "予算を約" + yen(diff) + "超えます。予算を上げるか、品数を減らしてください。"
+        : "予算内です（あと約" + yen(diff) + "）。") +
+      ' ' + state.people + '人 × 1週間分の合計です。</p></div>';
+
+    html += '<ul class="days">';
+    state.plan.forEach(function (day, i) {
+      var c = sumCost(day.dishes);
+      html += '<li class="day"><div class="dow" aria-label="' + DAYS[i] + '曜日">' + DAYS[i] + '</div><div>' +
+        '<ul class="dishes">' + day.dishes.map(function (d) {
+          return '<li><span><span class="cat">' + CAT[d.cat] + '</span><span class="name">' + d.name +
+            '</span></span><span class="yen">' + yen(d.cost) + '</span></li>';
+        }).join("") + '</ul>' +
+        '<div class="day-foot' + (day.over ? " over" : "") + '"><span>1人 ' + yen(c) + ' ／ 合計 ' + yen(c * state.people) +
+        (day.over ? "（予算超え）" : "") + '</span>' +
+        '<button type="button" class="redo" data-i="' + i + '">変える</button></div></div></li>';
+    });
+    html += '</ul>';
+    html += shoppingHtml();
+    html += '<div class="actions"><button type="button" id="again">全部つくり直す</button>' +
+      '<button type="button" id="copy">献立をコピー</button></div>';
+    el.innerHTML = html;
+    el.hidden = false;
+
+    el.querySelectorAll(".redo").forEach(function (b) {
+      b.addEventListener("click", function () { redo(+b.getAttribute("data-i")); });
+    });
+    $("#again").addEventListener("click", generate);
+    $("#copy").addEventListener("click", copyText);
+    $("#copyList").addEventListener("click", function () { copyWith(shoppingText(), $("#copyList"), "リストをコピー"); });
+    el.querySelectorAll(".items input").forEach(function (cb) {
+      cb.addEventListener("change", function () { state.checked[cb.getAttribute("data-k")] = cb.checked; });
+    });
+  }
+
+  function planText() {
+    var lines = ["【1週間の献立】" + state.people + "人 / 予算" + yen(state.budget) + " / " + state.count + "品"];
+    state.plan.forEach(function (day, i) {
+      lines.push(DAYS[i] + "：" + day.dishes.map(function (d) { return d.name; }).join("、"));
+    });
+    return lines.join("\n");
+  }
+  function copyWith(text, btn, label) {
+    function done(ok) { btn.textContent = ok ? "コピーしました" : "コピーできませんでした"; setTimeout(function () { btn.textContent = label; }, 1800); }
+    function fallback() {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        var r = document.execCommand("copy"); document.body.removeChild(ta); done(r);
+      } catch (e) { done(false); }
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+      } else fallback();
+    } catch (e) { fallback(); }
+  }
+  function copyText() { copyWith(planText(), $("#copy"), "献立をコピー"); }
+
+  // ----- 買い物リスト -----
+  function fmtAmt(a, unit) {
+    a = Math.round(a * 100) / 100;
+    if (unit === "g") {
+      var r = a < 200 ? Math.ceil(a / 10) * 10 : Math.ceil(a / 50) * 50;
+      return r >= 1000 ? (r / 1000) + "kg" : r + "g";
+    }
+    if (unit === "ml") return Math.ceil(a / 100) * 100 + "ml";
+    return Math.ceil(a) + unit;
+  }
+  function shoppingList() {
+    var map = {};
+    state.plan.forEach(function (day) {
+      day.dishes.forEach(function (d) {
+        (ING[d.name] || "").split(",").forEach(function (str) {
+          var m = /^(.+?):([\d.]+)(.+)$/.exec(str);
+          if (!m) return;
+          var key = m[1] + "|" + m[3];
+          if (!map[key]) map[key] = { key: key, name: m[1], unit: m[3], amt: 0, cat: CATMAP[m[1]] || "その他" };
+          map[key].amt += parseFloat(m[2]) * state.people;
+        });
+      });
+    });
+    var groups = {};
+    Object.keys(map).forEach(function (k) {
+      var it = map[k]; it.text = fmtAmt(it.amt, it.unit);
+      (groups[it.cat] = groups[it.cat] || []).push(it);
+    });
+    return CAT_ORDER.filter(function (c) { return groups[c]; }).map(function (c) {
+      return { cat: c, items: groups[c].sort(function (a, b) { return a.name.localeCompare(b.name, "ja"); }) };
+    });
+  }
+  function shoppingHtml() {
+    var html = '<section class="shop"><div class="shop-head"><h2>買い物リスト</h2>' +
+      '<button type="button" class="redo" id="copyList">リストをコピー</button></div>';
+    shoppingList().forEach(function (g) {
+      html += '<h3>' + g.cat + '</h3><ul class="items">';
+      g.items.forEach(function (it) {
+        html += '<li><label><input type="checkbox" data-k="' + it.key + '"' + (state.checked[it.key] ? " checked" : "") +
+          '><span class="iname">' + it.name + '</span><span class="iamt">' + it.text + '</span></label></li>';
+      });
+      html += '</ul>';
+    });
+    return html + '<p class="hint">' + state.people + '人分・1週間の合計です。調味料・油・だしは家にある前提です。量は目安なので、買う前に冷蔵庫を確認してください。</p></section>';
+  }
+  function shoppingText() {
+    var lines = ["【買い物リスト】" + state.people + "人分・1週間"];
+    shoppingList().forEach(function (g) {
+      lines.push("■" + g.cat);
+      g.items.forEach(function (it) { lines.push("・" + it.name + " " + it.text); });
+    });
+    return lines.join("\n");
+  }
+
+  // ----- 入力まわり -----
+  function save() { try { localStorage.setItem("kondate", JSON.stringify({ p: state.people, b: state.budget, n: state.count })); } catch (e) {} }
+  function load() {
+    try {
+      var s = JSON.parse(localStorage.getItem("kondate") || "null");
+      if (s) { state.people = s.p || 2; state.budget = s.b || 10000; state.count = s.n || 3; }
+    } catch (e) {}
+  }
+  function syncForm() {
+    $("#pVal").textContent = state.people + "人";
+    $("#budget").value = state.budget;
+    document.querySelectorAll("#seg button").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(+b.getAttribute("data-n") === state.count));
+    });
+    document.querySelectorAll("#chips .chip").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(+b.getAttribute("data-v") === state.budget));
+    });
+    var per = state.budget / 7 / state.people;
+    $("#perHint").textContent = isFinite(per) && state.budget > 0
+      ? "1人・1食あたり 約" + yen(per) : "";
+  }
+
+  $("#pMinus").addEventListener("click", function () { state.people = Math.max(1, state.people - 1); syncForm(); save(); });
+  $("#pPlus").addEventListener("click", function () { state.people = Math.min(10, state.people + 1); syncForm(); save(); });
+  $("#budget").addEventListener("input", function (e) {
+    var v = parseInt(e.target.value, 10);
+    state.budget = isNaN(v) ? 0 : v;
+    var per = state.budget / 7 / state.people;
+    document.querySelectorAll("#chips .chip").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(+b.getAttribute("data-v") === state.budget));
+    });
+    $("#perHint").textContent = state.budget > 0 ? "1人・1食あたり 約" + yen(per) : "";
+    save();
+  });
+  $("#chips").addEventListener("click", function (e) {
+    var b = e.target.closest(".chip"); if (!b) return;
+    state.budget = +b.getAttribute("data-v"); syncForm(); save();
+  });
+  $("#seg").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    state.count = +b.getAttribute("data-n"); syncForm(); save();
+  });
+  $("#go").addEventListener("click", function () {
+    var msg = $("#msg");
+    if (!(state.budget >= 1000)) { msg.textContent = "予算は1,000円以上で入力してください。"; return; }
+    msg.textContent = "";
+    generate();
+    $("#go").textContent = "つくり直す";
+    $("#result").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  load();
+  syncForm();
+})();
+</script>
+</body>
+</html>
